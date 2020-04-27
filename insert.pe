@@ -1,0 +1,55 @@
+#! /bin/fontforge
+
+usage="Usage: insert.pe [input-font] glyph1 glyph2 ..."
+
+Print("\n \n \n")
+
+if($argc <= 1)
+    Print(usage)
+    Quit(1)
+endif
+
+file     = $1
+
+# Figure out the filename and extension
+parts    = StrSplit(file, ".")
+ext      = parts[SizeOf(parts)-1]
+
+head     = parts[0]
+ix       = 1
+while(ix < SizeOf(parts)-1)
+    head = head + "." + parts[ix]
+    ix++
+endloop
+
+
+
+Open(file)
+
+Print("\n \n \n")
+
+argnum   = 2
+glyphnum = 0
+# Add each glyph into the private area of the font
+while(argnum <= $argc-1)
+    curr = $argv[argnum]
+    if(FileAccess(curr) == -1)
+        Print("File " + curr + " does not exist, aborting...")
+        Quit(1)
+    endif
+
+    Select(0xE000 + glyphnum)
+    Import(curr)
+    Print("###> Adding " + curr + " to font...")
+    glyphnum++
+    argnum++
+endloop
+
+if(glyphnum > 0)
+    outname = head + "-patched." + ext
+    Generate(outname)
+    Print("###> Successfully added " + glyphnum + " glyphs to font")
+    Print("###> Output saved as " + outname)
+endif
+
+Quit(0)
